@@ -42,6 +42,20 @@ Pick one of the configs as follows:
 - `CONFIG=large`
 
 
+### PicoRV32
+
+The `picorv32` directory contains a slighly modified version of the picorv32.v minimal processor with with the `empty
+_statement` in line 47 removed to allow the interpretation of the design.
+
+The testbench is a minimal testbench written in cpp that can be invoked with the command
+
+- ` make -C picorv32 run`
+
+- ` make -C picorv32 trace`
+
+To allow the generation of tabs for the trace option the `--observe-registers` pass is removed. 
+
+
 ### Riscinator
 
 Run benchmarks with `make run MODEL=riscinator BINARY=<binary>`.

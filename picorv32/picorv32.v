@@ -44,7 +44,7 @@
   `else
     `define FORMAL_KEEP
   `endif
-  `define assert(assert_expr) //empty_statement
+  `define assert(assert_expr) //empty_statement  // Removed empty_statement to allow arcilator to interpret the design
 `endif
 
 // uncomment this for register file in extra module
