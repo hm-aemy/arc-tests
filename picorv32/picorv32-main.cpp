@@ -69,11 +69,12 @@ int main(int argc, char **argv) {
   auto &view = tb.model.view;
 
   view.resetn = 0;
-  tb.tick();
-  tb.tick();
+  for (unsigned i = 1; i <= 1000; ++i) {
+    tb.tick();
+  }
   view.resetn = 1;
 
-  for (unsigned i = 1; i <= 128; ++i) {
+  for (unsigned i = 1; i <= 1000; ++i) {
     tb.tick();
 
     conversion_union write_data;
@@ -81,14 +82,6 @@ int main(int argc, char **argv) {
     conversion_union memory_write;
     view.mem_ready = 0;
     if (view.mem_valid && !view.mem_ready) {
-      if (view.mem_instr){
-        printf("ifetch 0x%08x: 0x%08x \n", view.mem_addr, view.mem_rdata);
-      } else if (view.mem_wstrb){
-        printf("write  0x%08x: 0x%08x (wstrb=%b) \n", view.mem_addr, view.mem_wdata, view.mem_wstrb);
-      } else {
-        printf("read   0x%08x: 0x%08x \n", view.mem_addr, view.mem_rdata);
-      }
-
       if (view.mem_addr < 1024) {
         view.mem_ready = 1;
 
@@ -102,6 +95,14 @@ int main(int argc, char **argv) {
 				if (write_strob.values_8[2]) memory_write.values_8[2] = write_data.values_8[2];
 				if (write_strob.values_8[3]) memory_write.values_8[3] = write_data.values_8[3];
         memory[view.mem_addr >> 2] = memory_write.value_32;
+      }
+
+      if (view.mem_instr){
+        printf("ifetch 0x%08x: 0x%08x \n", view.mem_addr, view.mem_rdata);
+      } else if (view.mem_wstrb){
+        printf("write  0x%08x: 0x%08x (wstrb=%b) \n", view.mem_addr, view.mem_wdata, view.mem_wstrb);
+      } else {
+        printf("read   0x%08x: 0x%08x \n", view.mem_addr, view.mem_rdata);
       }
     }
   }
