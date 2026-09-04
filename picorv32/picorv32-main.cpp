@@ -46,13 +46,13 @@ int main(int argc, char **argv) {
   std::string runtimeArgs;
 
   // Commands in Memory
-  uint8_t memory [256][4] = {
-    {0x3f, 0xc0, 0x00, 0x93}, //       li      x1,1020 
-    {0x00, 0x00, 0xa0, 0x23}, //       sw      x0,0(x1)
-    {0x00, 0x00, 0xa1, 0x03}, // loop: lw      x2,0(x1)
-    {0x00, 0x11, 0x01, 0x13}, //       addi    x2,x2,1
-    {0x00, 0x20, 0xa0, 0x23}, //       sw      x2,0(x1)
-    {0xff, 0x5f, 0xf0, 0x6f}  //       j       <loop>
+  uint32_t memory [256] = {
+    {0x3fc00093}, //       li      x1,1020 
+    {0x0000a023}, //       sw      x0,0(x1)
+    {0x0000a103}, // loop: lw      x2,0(x1)
+    {0x00110113}, //       addi    x2,x2,1
+    {0x0020a023}, //       sw      x2,0(x1)
+    {0xff5ff06f}  //       j       <loop>
   };
 
   for (int i = 1; i < argc; ++i) {
@@ -72,39 +72,36 @@ int main(int argc, char **argv) {
   tb.tick();
   tb.tick();
   view.resetn = 1;
-  for (unsigned i = 1; i <= 64; ++i) {
+
+  for (unsigned i = 1; i <= 128; ++i) {
     tb.tick();
 
-    if (view.mem_valid && view.mem_ready) {
-      if (view.mem_instr){
-        printf("ifetch 0x%08x: 0x%08x /n", view.mem_addr, view.mem_rdata);
-      } else if (view.mem_wstrb){
-        printf("write  0x%08x: 0x%08x (wstrb=%b) /n", view.mem_addr, view.mem_wdata, view.mem_wstrb);
-      } else {
-        printf("read   0x%08x: 0x%08x /n", view.mem_addr, view.mem_rdata);
-      }
-    }
-
-    conversion_union read_data;
     conversion_union write_data;
     conversion_union write_strob;
+    conversion_union memory_write;
     view.mem_ready = 0;
     if (view.mem_valid && !view.mem_ready) {
+      if (view.mem_instr){
+        printf("ifetch 0x%08x: 0x%08x \n", view.mem_addr, view.mem_rdata);
+      } else if (view.mem_wstrb){
+        printf("write  0x%08x: 0x%08x (wstrb=%b) \n", view.mem_addr, view.mem_wdata, view.mem_wstrb);
+      } else {
+        printf("read   0x%08x: 0x%08x \n", view.mem_addr, view.mem_rdata);
+      }
+
       if (view.mem_addr < 1024) {
         view.mem_ready = 1;
 
-        read_data.values_8[0] = memory[view.mem_addr >> 2][0];
-        read_data.values_8[1] = memory[view.mem_addr >> 2][1];
-        read_data.values_8[2] = memory[view.mem_addr >> 2][2];
-        read_data.values_8[3] = memory[view.mem_addr >> 2][3];
-        view.mem_rdata = read_data.value_32;
+        view.mem_rdata = memory[view.mem_addr >> 2];
 
         write_data.value_32 = view.mem_wdata;
         write_strob.value_32 = view.mem_wstrb;
-        if (write_strob.values_8[0]) memory[view.mem_addr >> 2][0] = write_data.values_8[0];
-				if (write_strob.values_8[1]) memory[view.mem_addr >> 2][1] = write_data.values_8[1];
-				if (write_strob.values_8[2]) memory[view.mem_addr >> 2][2] = write_data.values_8[2];
-				if (write_strob.values_8[3]) memory[view.mem_addr >> 2][3] = write_data.values_8[3];
+        memory_write.value_32 = memory[view.mem_addr >> 2];
+        if (write_strob.values_8[0]) memory_write.values_8[0] = write_data.values_8[0];
+				if (write_strob.values_8[1]) memory_write.values_8[1] = write_data.values_8[1];
+				if (write_strob.values_8[2]) memory_write.values_8[2] = write_data.values_8[2];
+				if (write_strob.values_8[3]) memory_write.values_8[3] = write_data.values_8[3];
+        memory[view.mem_addr >> 2] = memory_write.value_32;
       }
     }
   }
