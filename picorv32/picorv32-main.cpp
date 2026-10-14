@@ -46,6 +46,11 @@ int main(int argc, char **argv) {
   std::string runtimeArgs;
 
   // Commands in Memory
+#ifdef UseFirmwareFile
+  uint32_t mem_size = 128*1024/4;
+  uint32_t memory [128*1024/4];
+#else
+  uint32_t mem_size = 256;
   uint32_t memory [256] = {
     {0x3fc00093}, //       li      x1,1020 
     {0x0000a023}, //       sw      x0,0(x1)
@@ -54,6 +59,7 @@ int main(int argc, char **argv) {
     {0x0020a023}, //       sw      x2,0(x1)
     {0xff5ff06f}  //       j       <loop>
   };
+#endif
 
   for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "--trace") == 0 && i + 1 < argc) {
@@ -82,7 +88,7 @@ int main(int argc, char **argv) {
     conversion_union memory_write;
     view.mem_ready = 0;
     if (view.mem_valid && !view.mem_ready) {
-      if (view.mem_addr < 1024) {
+      if (view.mem_addr < mem_size*4) {
         view.mem_ready = 1;
 
         view.mem_rdata = memory[view.mem_addr >> 2];
