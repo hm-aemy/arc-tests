@@ -2,6 +2,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+//#define UseFirmwareFile
 
 // 32bit unit to 4x 8bit conversion union
 union conversion_union{
@@ -45,21 +50,34 @@ private:
 int main(int argc, char **argv) {
   std::string runtimeArgs;
 
+  #ifdef UseFirmwareFile
+  std::string file_name = "firmware.hex";
+  #else
+  std::string file_name ="firmware_ez.hex";
+  #endif
+  int cnt = 0;
+  int mem_size;
+  uint32_t *memory;
+  std::string s;
   // Commands in Memory
-#ifdef UseFirmwareFile
-  uint32_t mem_size = 128*1024/4;
-  uint32_t memory [128*1024/4];
-#else
-  uint32_t mem_size = 256;
-  uint32_t memory [256] = {
-    {0x3fc00093}, //       li      x1,1020 
-    {0x0000a023}, //       sw      x0,0(x1)
-    {0x0000a103}, // loop: lw      x2,0(x1)
-    {0x00110113}, //       addi    x2,x2,1
-    {0x0020a023}, //       sw      x2,0(x1)
-    {0xff5ff06f}  //       j       <loop>
-  };
-#endif
+  std::ifstream file(file_name);
+  if(file.is_open()){
+    file.seekg( 0, std::ios::end );
+    mem_size=file.tellg()/4+250;
+    file.seekg(0);
+    memory = new uint32_t[mem_size];
+    while(std::getline(file,s)){
+      memory[cnt++]=(uint32_t)std::stoll(s,nullptr,16);
+    }
+  file.close();
+  } else {
+    printf("Firmware file not found.\n");
+    exit(0);
+  }
+  printf("mem_size: %d\n",mem_size);
+  for (int i = 0; i < 23; i++ ){
+    printf("%08x\n",memory[i]);
+  }
 
   for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "--trace") == 0 && i + 1 < argc) {
@@ -80,6 +98,7 @@ int main(int argc, char **argv) {
   }
   view.resetn = 1;
 
+  printf("End Reset \n");
   for (unsigned i = 1; i <= 1000; ++i) {
     tb.tick();
 
@@ -112,4 +131,5 @@ int main(int argc, char **argv) {
       }
     }
   }
+  printf("End Testbench\n");
 }

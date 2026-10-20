@@ -12,30 +12,17 @@ main:
 	sd	ra,24(sp)
 	sd	s0,16(sp)
 	addi	s0,sp,32
-	sb	zero,-17(s0)
-	sw	zero,-24(s0)
-	j	.L2
-.L3:
-	lbu	a5,-17(s0)
-	sext.w	a5,a5
-	not	a5,a5
-	sext.w	a5,a5
-	snez	a5,a5
-	sb	a5,-17(s0)
-	lw	a5,-24(s0)
-	addiw	a5,a5,1
+	li	a5,4
+	sw	a5,-20(s0)
+	li	a5,12
 	sw	a5,-24(s0)
 .L2:
+	lw	a5,-20(s0)
+	mv	a4,a5
 	lw	a5,-24(s0)
-	sext.w	a4,a5
-	li	a5,31
-	ble	a4,a5,.L3
-	li	a5,0
-	mv	a0,a5
-	ld	ra,24(sp)
-	ld	s0,16(sp)
-	addi	sp,sp,32
-	jr	ra
+	addw	a5,a4,a5
+	sw	a5,-28(s0)
+	j	.L2
 	.size	main, .-main
 	.ident	"GCC: (14.2.0+19) 14.2.0"
 	.section	.note.GNU-stack,"",@progbits

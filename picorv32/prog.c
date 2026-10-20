@@ -1,10 +1,10 @@
-#include <stdbool.h>
+// cpp program for firmware compilation
 
 int main() {
-    bool clk = 0;
-    for (int i = 0; i < 32; i++){
-        clk = ~clk;
-    }
-    return(0);
-
+   int a = 4;
+   int b = 12;
+   while(1){
+    int c = a + b;
+   }
+   return 0;
 }
