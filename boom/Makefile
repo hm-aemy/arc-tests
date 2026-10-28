@@ -53,7 +53,7 @@ $(BUILD_MODEL).mlir: $(BUILD_MODEL).fir
 #===-------------------------------------------------------------------------===
 
 $(BUILD_MODEL)-arc.o $(BUILD_MODEL).json &: $(BUILD_MODEL).mlir
-	arcilator $< --state-file=$(BUILD_MODEL).json -o $(BUILD_MODEL)-arc.ll $(ARCILATOR_ARGS)
+	arcilator $< --state-file=$(BUILD_MODEL).json --no-generate-driver -o $(BUILD_MODEL)-arc.ll $(ARCILATOR_ARGS)
 	opt -O1 -S $(BUILD_MODEL)-arc.ll | llc -O3 --filetype=obj -o $(BUILD_MODEL)-arc.o
 	objdump -d $(BUILD_MODEL)-arc.o > $(BUILD_MODEL)-arc.s
 
