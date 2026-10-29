@@ -22,7 +22,7 @@ $(shell mkdir -p $(BUILD_DIR))
 SOURCE_MODEL ?= snitch
 BUILD_MODEL ?= $(BUILD_DIR)/snitch
 
-ARCILATOR_ARGS ?= --mlir-timing --mlir-pass-statistics
+ARCILATOR_ARGS ?= --mlir-timing --mlir-pass-statistics --no-generate-driver
 VERILATOR_ARGS ?= -DPRINTF_COND=0 -DASSERT_VERBOSE_COND=0 -DSTOP_COND=0 -Wno-ASCRANGE -Wno-WIDTHCONCAT -Wno-CASEINCOMPLETE -Wno-LATCH -Wno-WIDTHEXPAND
 
 TRACE ?= 0
@@ -55,7 +55,7 @@ $(BUILD_MODEL).mlir: snitch_th.sv snitch.sv
 #===-------------------------------------------------------------------------===
 
 $(BUILD_MODEL)-arc.o $(BUILD_MODEL).json &: $(BUILD_MODEL).mlir
-	arcilator $< --state-file=$(BUILD_MODEL).json --no-generate-driver -o $(BUILD_MODEL)-arc.ll $(ARCILATOR_ARGS)
+	arcilator $< --state-file=$(BUILD_MODEL).json -o $(BUILD_MODEL)-arc.ll $(ARCILATOR_ARGS)
 	opt -O3 -S $(BUILD_MODEL)-arc.ll | llc -O3 --filetype=obj -o $(BUILD_MODEL)-arc.o
 
 $(BUILD_MODEL)-arc.h: $(BUILD_MODEL).json
