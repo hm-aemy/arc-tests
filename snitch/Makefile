@@ -111,6 +111,7 @@ run-vtor: RUN_ARGS += --vtor
 run-vtor: run
 run-vtor-circt: RUN_ARGS += --vtor-circt
 run-vtor-circt: run
+run-trace: TRACE = 1
 run-trace: RUN_ARGS += --trace $(BUILD_MODEL).vcd
 run-trace: run
 
@@ -126,3 +127,8 @@ benchmark-vtor-circt: benchmark
 
 hyperfine: $(BUILD_MODEL)-main
 	hyperfine --warmup=3 "$(BUILD_MODEL)-main $(BINARY) --arcs" "$(BUILD_MODEL)-main $(BINARY) --vtor"
+
+
+.PHONY: clean
+clean:
+	rm -rf build

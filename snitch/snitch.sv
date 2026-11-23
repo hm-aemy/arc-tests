@@ -1632,7 +1632,7 @@ package fpnew_pkg;
     for (int unsigned i = 0; i < NUM_FP_FORMATS; i++)
       if (cfg[i] && types[i] == MERGED)
         return 1'b1;
-      return 1'b0;
+    return 1'b0;
   endfunction
 
   // Return whether the given format is the first active one set as MERGED
@@ -1650,7 +1650,7 @@ package fpnew_pkg;
     for (int unsigned i = 0; i < NUM_FP_FORMATS; i++)
       if (cfg[i] && types[i] == MERGED)
         return fp_format_e'(i);
-      return fp_format_e'(0);
+    return fp_format_e'(0);
   endfunction
 
 endpackage

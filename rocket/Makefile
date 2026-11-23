@@ -3,7 +3,7 @@ mkfile_path := $(dir $(MAKEFILE_LIST))
 REPO_ROOT := ..
 ARCILATOR_UTILS_ROOT ?= $(dir $(shell which arcilator))
 BINARY ?= $(REPO_ROOT)/benchmarks/dhrystone_rv64gcv.riscv
-CONFIG ?= small-v1.6
+CONFIG ?= small-master
 
 ARCRUNTIME ?= 0
 ARCRUNTIME_INCLUDE_DIR   ?= $(ARCILATOR_UTILS_ROOT)/../../include
@@ -103,6 +103,7 @@ run-arcs: RUN_ARGS += --arcs
 run-arcs: run
 run-vtor: RUN_ARGS += --vtor
 run-vtor: run
+run-trace: TRACE = 1
 run-trace: RUN_ARGS += --trace $(BUILD_MODEL).vcd
 run-trace: run
 
@@ -116,3 +117,7 @@ benchmark-vtor: benchmark
 
 hyperfine: $(BUILD_MODEL)-main
 	hyperfine --warmup=3 "$(BUILD_MODEL)-main $(BINARY) --arcs" "$(BUILD_MODEL)-main $(BINARY) --vtor"
+
+.PHONY: clean
+clean:
+	rm -rf build
