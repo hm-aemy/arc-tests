@@ -97,7 +97,8 @@ run-arcs: run
 run-vtor: RUN_ARGS += --vtor
 run-vtor: run
 run-trace: RUN_ARGS += --trace $(BUILD_MODEL).vcd
-run-trace: run
+run-trace:
+	@$(MAKE) TRACE=1 run RUN_ARGS="$(RUN_ARGS)"
 
 benchmark: $(BUILD_MODEL)-main
 	$(REPO_ROOT)/benchmark.py -- $(BUILD_MODEL)-main $(BINARY) $(RUN_ARGS)
@@ -109,3 +110,7 @@ benchmark-vtor: benchmark
 
 hyperfine: $(BUILD_MODEL)-main
 	hyperfine --warmup=3 "$(BUILD_MODEL)-main $(BINARY) --arcs" "$(BUILD_MODEL)-main $(BINARY) --vtor"
+
+.PHONY: clean
+clean:
+	rm -rf build

@@ -83,7 +83,7 @@ $(BUILD_MODEL)-vtor-circt.a $(BUILD_MODEL)-vtor-circt.h &: $(BUILD_MODEL)-circt.
 	cp $(BUILD_MODEL)-vtor-circt/VSnitchCirct.h $(BUILD_MODEL)-vtor-circt.h
 
 #===-------------------------------------------------------------------------===
-# Testbench
+# Testbenchrun-trace: run
 #===-------------------------------------------------------------------------===
 
 $(BUILD_MODEL)-model-arc.o: $(SOURCE_MODEL)-model-arc.cpp $(SOURCE_MODEL)-model.h $(BUILD_MODEL)-arc.h
@@ -110,10 +110,10 @@ run-arcs: run
 run-vtor: RUN_ARGS += --vtor
 run-vtor: run
 run-vtor-circt: RUN_ARGS += --vtor-circt
-run-vtor-circt: run
-run-trace: TRACE = 1
+run-vtor-circt: run 
 run-trace: RUN_ARGS += --trace $(BUILD_MODEL).vcd
-run-trace: run
+run-trace:
+	@$(MAKE) TRACE=1 run RUN_ARGS="$(RUN_ARGS)"
 
 benchmark: $(BUILD_MODEL)-main
 	$(REPO_ROOT)/benchmark.py -- $(BUILD_MODEL)-main $(BINARY) $(RUN_ARGS)
@@ -127,7 +127,6 @@ benchmark-vtor-circt: benchmark
 
 hyperfine: $(BUILD_MODEL)-main
 	hyperfine --warmup=3 "$(BUILD_MODEL)-main $(BINARY) --arcs" "$(BUILD_MODEL)-main $(BINARY) --vtor"
-
 
 .PHONY: clean
 clean:
