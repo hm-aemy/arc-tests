@@ -53,6 +53,18 @@ Run Snitch benchmarks as follows:
 - `make -C snitch run-arcs`
 - `make -C snitch run-vtor`
 
+### PicoRV32
+
+The `picorv32` directory contains a modified version of the picorv32.v minimal processor with with the `empty
+_statement` in line 47 removed to allow the interpretation of the design.
+
+The testbench is a recreation of the testbench_ez.v in Cpp. To run the test use:
+
+- ` make -C picorv32 run`
+
+- ` make -C picorv32 trace`
+
+To allow the generation of tabs with arcilator for the trace option the `--observe-registers` is removed. 
 
 ## Benchmarks
 
