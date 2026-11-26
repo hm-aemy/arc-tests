@@ -2,7 +2,7 @@
 #include "build/picorv32-arc.h"
 #include <fstream>
 #include <optional>
-
+/*
 namespace {
 class ArcilatorPicorv32Model : public Picorv32Model {
   picorv32_th model;
@@ -45,60 +45,17 @@ public:
     };
   }
 
-  void set_clock(bool clk) override { model.view.clk = clk; }
+  void set_clk(bool clk) override { model.view.clk = clk; }
 
   void set_reset(bool resetn) override { model.view.resetn = resetn; }
 
   void get_trap(bool trap) override {trap = model.view.trap; }
 
-  void set_Data(const Data &in) override {
-    model.view.mem_ready = in.mem_ready;
-    model.view.mem_rdata = in.mem_rdata;
+  void get_trace_valid(bool trace_valid) override {
+    out.trace_valid = model.view.trace_valid;
   }
 
-  void get_Data(Data &out) override {
-    out.mem_valid = model.view.mem_valid;
-    out.mem_instr = model.view.mem_instr;
-    out.mem_wdata = model.view.mem_wdata;
-    out.mem_addr = model.view.mem_addr;
-    out.mem_wdata = model.view.mem_wstrb;
-  }
-
-  void get_LookAhead(LookAhead &out) override {
-    out.mem_la_read = model.view.mem_la_read;
-    out.mem_la_write = model.view.mem_la_write;
-    out.mem_la_addr = model.view.mem_la_addr;
-    out.mem_la_wdata = model.view.mem_la_wdata;
-    out.mem_la_wstrb = model.view.mem_la_wstrb;
-  }
-
-  void set_PCPI(const PCPI &in) override {
-    model.view.pcpi_wr = in.pcpi_wr;
-    model.view.pcpi_rd = in.pcpi_rd;
-    model.view.pcpi_wait = in.pcpi_wait;
-    model.view.pcpi_ready = in.pcpi_ready;
-  }
-
-  void get_PCPI(PCPI &out) override {
-    out.pcpi_valid = model.view.pcpi_valid;
-    out.pcpi_insn = model.view.pcpi_insn;
-    out.pcpi_rs1 = model.view.pcpi_rs1;
-    out.pcpi_rs2 = model.view.pcpi_rs2;
-  }
-
-  void set_IRQ(const IRQ &in) override {
-    model.view.irq = in.irq;
-  }
-
-  void get_IRQ(IRQ &out) override {
-    out.eoi = model.view.eoi;
-  }
-
-  void set_Trace (const Trace &in) override {
-    model.view.trace_valid = in.trace_valid;
-  }
-
-  void get_Trace (Trace &out) override {
+  void get_trace_data(uint64_t trace_data) override {
     out.trace_data = model.view.trace_data;
   }
 };
@@ -107,3 +64,4 @@ public:
 std::unique_ptr<Picorv32Model> makeArcilatorModel() {
   return std::make_unique<ArcilatorPicorv32Model>();
 }
+*/

@@ -2,7 +2,7 @@
  *  PicoRV32 test harness
  */
 
-`timescale 1 ns / 1 ps
+//`timescale 1 ns / 1 ps
 
 module picorv32_th #(
 	parameter AXI_TEST = 0,
@@ -18,10 +18,17 @@ module picorv32_th #(
 	reg [31:0] irq = 0;
 
 	reg [15:0] count_cycle = 0;
-	always @(posedge clk) count_cycle <= resetn ? count_cycle + 1 : 0;
+	always_ff @(posedge clk) begin
+		if(!resetn) begin
+			count_cycle <= 16'h0;
+		end else begin
+			count_cycle <= count_cycle + 1'b1;
+		end
+	end
 
-	always @* begin
-		irq = 0;
+	always_comb begin
+		irq [3:0]= 0;
+		irq [31:6]= 0;
 		irq[4] = &count_cycle[12:0];
 		irq[5] = &count_cycle[15:0];
 	end
@@ -78,6 +85,16 @@ module picorv32_th #(
 		.tests_passed    (tests_passed    )
 	);
 
+	logic 		 pcpi_valid;
+	logic [31:0] pcpi_insn;
+	logic [31:0] pcpi_rs1;
+	logic [31:0] pcpi_rs2;
+	logic 		 pcpi_wr;
+	logic [31:0] pcpi_rd;
+	logic		 pcpi_wait;
+	logic 		 pcpi_ready;
+	logic [31:0] eoi;
+
 	picorv32_axi #(
 		.ENABLE_MUL(1),
 		.ENABLE_DIV(1),
@@ -104,23 +121,32 @@ module picorv32_th #(
 		.mem_axi_rvalid (mem_axi_rvalid ),
 		.mem_axi_rready (mem_axi_rready ),
 		.mem_axi_rdata  (mem_axi_rdata  ),
+		.pcpi_valid		(pcpi_valid		),
+		.pcpi_insn		(pcpi_insn		),
+		.pcpi_rs1		(pcpi_rs1		),
+		.pcpi_rs2		(pcpi_rs2		),
+		.pcpi_wr		(pcpi_wr		),
+		.pcpi_rd		(pcpi_rd		),
+		.pcpi_wait		(pcpi_wait		),
+		.pcpi_ready		(pcpi_ready   	),
 		.irq            (irq            ),
+		.eoi			(eoi			),
 		.trace_valid    (trace_valid    ),
 		.trace_data     (trace_data     )
 	);
 
-	reg [1023:0] firmware_file;
-	initial begin
-		if (!$value$plusargs("firmware=%s", firmware_file))
-			firmware_file = "../benchmarks/dhrystone_rv32i.riscv";
-		$readmemh(firmware_file, mem.memory);
-	end
+	//reg [1023:0] firmware_file;
+	//initial begin
+	//	if (!$value$plusargs("firmware=%s", firmware_file))
+	//		firmware_file = "../benchmarks/common/crt.S";
+	//	$readmemh(firmware_file, mem.memory);
+	//end
 
-	integer cycle_counter;
+	/*integer cycle_counter;
 	always @(posedge clk) begin
 		cycle_counter <= resetn ? cycle_counter + 1 : 0;
 		if (resetn && trap) begin
-			repeat (10) @(posedge clk);
+			//repeat (10) @(posedge clk);
 			$display("TRAP after %1d clock cycles", cycle_counter);
 			if (tests_passed) begin
 				$display("ALL TESTS PASSED.");
@@ -132,7 +158,7 @@ module picorv32_th #(
 				$stop;
 			end
 		end
-	end
+	end*/
 endmodule
 
 module axi4_memory #(
@@ -166,12 +192,14 @@ module axi4_memory #(
 
 	output reg        tests_passed
 );
-	reg [31:0]   memory [0:128*1024/4-1] /*verilator public*/; 
+	//reg [31:0]memory[0:128*1024/4-1] /*verilator public*/;
+	reg [0:128*1024/4*32-1]memory /*verilator public*/;
+	reg [31:0]memory_temp; 
 	reg verbose;
-	initial verbose = $test$plusargs("verbose") || VERBOSE;
+	//initial verbose = $test$plusargs("verbose") || VERBOSE;
 
-	reg axi_test;
-	initial axi_test = $test$plusargs("axi_test") || AXI_TEST;
+	reg axi_test = 1;
+	//initial axi_test = $test$plusargs("axi_test") || AXI_TEST;
 
 	initial begin
 		mem_axi_awready = 0;
@@ -187,9 +215,9 @@ module axi4_memory #(
 	task xorshift64_next;
 		begin
 			// see page 4 of Marsaglia, George (July 2003). "Xorshift RNGs". Journal of Statistical Software 8 (14).
-			xorshift64_state = xorshift64_state ^ (xorshift64_state << 13);
-			xorshift64_state = xorshift64_state ^ (xorshift64_state >>  7);
-			xorshift64_state = xorshift64_state ^ (xorshift64_state << 17);
+			xorshift64_state <= xorshift64_state ^ (xorshift64_state << 13);
+			xorshift64_state <= xorshift64_state ^ (xorshift64_state >>  7);
+			xorshift64_state <= xorshift64_state ^ (xorshift64_state << 17);
 		end
 	endtask
 
@@ -200,7 +228,7 @@ module axi4_memory #(
 	always @(posedge clk) begin
 		if (axi_test) begin
 				xorshift64_next;
-				{fast_axi_transaction, async_axi_transaction, delay_axi_transaction} <= xorshift64_state;
+				{xorshift64_state[63:13],fast_axi_transaction, async_axi_transaction, delay_axi_transaction} <= xorshift64_state;
 		end
 	end
 
@@ -220,34 +248,35 @@ module axi4_memory #(
 
 	task handle_axi_arvalid; begin
 		mem_axi_arready <= 1;
-		latched_raddr = mem_axi_araddr;
-		latched_rinsn = mem_axi_arprot[2];
-		latched_raddr_en = 1;
+		latched_raddr <= mem_axi_araddr;
+		latched_rinsn <= mem_axi_arprot[2];
+		latched_raddr_en <= 1;
 		fast_raddr <= 1;
 	end endtask
 
 	task handle_axi_awvalid; begin
 		mem_axi_awready <= 1;
-		latched_waddr = mem_axi_awaddr;
+		latched_waddr <= mem_axi_awaddr;
 		latched_waddr_en = 1;
 		fast_waddr <= 1;
 	end endtask
 
 	task handle_axi_wvalid; begin
 		mem_axi_wready <= 1;
-		latched_wdata = mem_axi_wdata;
-		latched_wstrb = mem_axi_wstrb;
-		latched_wdata_en = 1;
+		latched_wdata <= mem_axi_wdata;
+		latched_wstrb <= mem_axi_wstrb;
+		latched_wdata_en <= 1;
 		fast_wdata <= 1;
 	end endtask
 
 	task handle_axi_rvalid; begin
+		memory_temp <= memory[((latched_raddr >> 2)*32)+:32];
 		if (verbose)
 			$display("RD: ADDR=%08x DATA=%08x%s", latched_raddr, memory[latched_raddr >> 2], latched_rinsn ? " INSN" : "");
 		if (latched_raddr < 128*1024) begin
-			mem_axi_rdata <= memory[latched_raddr >> 2];
+			mem_axi_rdata <= memory_temp;//memory[latched_raddr >> 2];
 			mem_axi_rvalid <= 1;
-			latched_raddr_en = 0;
+			latched_raddr_en <= 0;
 		end else begin
 			$display("OUT-OF-BOUNDS MEMORY READ FROM %08x", latched_raddr);
 			$finish;
@@ -258,10 +287,11 @@ module axi4_memory #(
 		if (verbose)
 			$display("WR: ADDR=%08x DATA=%08x STRB=%04b", latched_waddr, latched_wdata, latched_wstrb);
 		if (latched_waddr < 128*1024) begin
-			if (latched_wstrb[0]) memory[latched_waddr >> 2][ 7: 0] <= latched_wdata[ 7: 0];
-			if (latched_wstrb[1]) memory[latched_waddr >> 2][15: 8] <= latched_wdata[15: 8];
-			if (latched_wstrb[2]) memory[latched_waddr >> 2][23:16] <= latched_wdata[23:16];
-			if (latched_wstrb[3]) memory[latched_waddr >> 2][31:24] <= latched_wdata[31:24];
+			if (latched_wstrb[0]) memory_temp[ 7: 0] <= latched_wdata[ 7: 0];
+			if (latched_wstrb[1]) memory_temp[15: 8] <= latched_wdata[15: 8];
+			if (latched_wstrb[2]) memory_temp[23:16] <= latched_wdata[23:16];
+			if (latched_wstrb[3]) memory_temp[31:24] <= latched_wdata[31:24];
+			memory[((latched_raddr >> 2)*32)+:32] <= memory_temp;
 		end else
 		if (latched_waddr == 32'h1000_0000) begin
 			if (verbose) begin
@@ -275,17 +305,18 @@ module axi4_memory #(
 				$fflush();
 `endif
 			end
+// After here
 		end else
 		if (latched_waddr == 32'h2000_0000) begin
 			if (latched_wdata == 123456789)
-				tests_passed = 1;
+				tests_passed <= 1;
 		end else begin
 			$display("OUT-OF-BOUNDS MEMORY WRITE TO %08x", latched_waddr);
 			$finish;
 		end
 		mem_axi_bvalid <= 1;
 		latched_waddr_en = 0;
-		latched_wdata_en = 0;
+		latched_wdata_en <= 0;
 	end endtask
 
 	always @(negedge clk) begin
@@ -314,20 +345,20 @@ module axi4_memory #(
 		end
 
 		if (mem_axi_arvalid && mem_axi_arready && !fast_raddr) begin
-			latched_raddr = mem_axi_araddr;
-			latched_rinsn = mem_axi_arprot[2];
-			latched_raddr_en = 1;
+			latched_raddr <= mem_axi_araddr;
+			latched_rinsn <= mem_axi_arprot[2];
+			latched_raddr_en <= 1;
 		end
 
 		if (mem_axi_awvalid && mem_axi_awready && !fast_waddr) begin
-			latched_waddr = mem_axi_awaddr;
+			latched_waddr <= mem_axi_awaddr;
 			latched_waddr_en = 1;
 		end
 
 		if (mem_axi_wvalid && mem_axi_wready && !fast_wdata) begin
-			latched_wdata = mem_axi_wdata;
-			latched_wstrb = mem_axi_wstrb;
-			latched_wdata_en = 1;
+			latched_wdata <= mem_axi_wdata;
+			latched_wstrb <= mem_axi_wstrb;
+			latched_wdata_en <= 1;
 		end
 
 		if (mem_axi_arvalid && !(latched_raddr_en || fast_raddr) && !delay_axi_transaction[0]) handle_axi_arvalid;

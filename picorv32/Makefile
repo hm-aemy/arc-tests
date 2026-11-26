@@ -23,8 +23,8 @@ $(shell mkdir -p $(BUILD_DIR))
 SOURCE_MODEL ?= picorv32
 BUILD_MODEL ?= $(BUILD_DIR)/picorv32
 
-ARCILATOR_ARGS ?= --mlir-timing --mlir-pass-statistics --no-generate-driver
-VERILATOR_ARGS ?= -DPRINTF_COND=0 -DASSERT_VERBOSE_COND=0 -DSTOP_COND=0 -Wno-ASCRANGE -Wno-WIDTHCONCAT -Wno-CASEINCOMPLETE -Wno-LATCH -Wno-WIDTHEXPAND
+ARCILATOR_ARGS ?=  --mlir-timing --mlir-pass-statistics --no-generate-driver
+VERILATOR_ARGS ?=  --timing -DPRINTF_COND=0 -DASSERT_VERBOSE_COND=0 -DSTOP_COND=0 -Wno-ASCRANGE -Wno-WIDTHCONCAT -Wno-CASEINCOMPLETE -Wno-LATCH -Wno-WIDTHEXPAND
 
 TRACE ?= 0
 
@@ -50,8 +50,9 @@ endif
 #===-------------------------------------------------------------------------===
 
 $(BUILD_MODEL).mlir: picorv32_th.sv picorv32.v
-	circt-verilog picorv32_th.sv picorv32.v --top=picorv32_th -o $@
-
+	circt-verilog picorv32_th.sv picorv32.v --top=picorv32_th | circt-opt --llhd-unroll-loops --llhd-mem2reg --llhd-hoist-signals --llhd-deseq --llhd-lower-processes --llhd-sig2reg| circt-opt --canonicalize --cse --convert-to-arcs -o $@
+#	circt-verilog picorv32_th.sv picorv32.v --top=picorv32_th | circt-opt --llhd-inline-calls --llhd-sig2reg --llhd-unroll-loops --llhd-mem2reg --llhd-hoist-signals --llhd-deseq --canonicalize --cse --arc-lower-processes --convert-to-arcs -arc-lower-coroutines -o $@
+# --llhd-inline-calls --llhd-sig2reg --llhd-unroll-loops --llhd-mem2reg --llhd-hoist-signals --llhd-deseq --canonicalize --cse --sccp --arc-lower-processes --convert-to-arcs -arc-lower-coroutines -arc-lower-processes -o $@
 #===-------------------------------------------------------------------------===
 # Arcilator
 #===-------------------------------------------------------------------------===

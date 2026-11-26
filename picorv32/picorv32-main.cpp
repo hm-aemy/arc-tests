@@ -88,67 +88,30 @@ public:
   }
   
 
-  void set_clock(bool clock) override {
+  void set_clk(bool clk) override {
     for (auto &model : models)
-      model->set_clock(clock);
+      model->set_clock(clk);
   }
 
-  void set_reset(bool reset) override {
+  void set_resetn(bool resetn) override {
     for (auto &model : models)
-      model->set_reset(reset);
-  }
-
-  void set_Data(const Data &in) override {
-    for (auto &model : models)
-      model->set_Data(in);
+      model->set_resetn(resetn);
   }
 
   void get_trap(bool trap) override {
-    if (!models.empty())
-      models[0]->get_trap(trap);
-  }
-
-  void get_Data(Data &out) override {
-    if (!models.empty())
-      models[0]->get_Data(out);
-  }
-
-  void get_LookAhead(LookAhead &out) override {
-    if (!models.empty())
-      models[0]->get_LookAhead(out);
-  }
-
-  void set_PCPI(const PCPI &in) override {
     for (auto &model : models)
-      model->set_PCPI(in);
+      model->set_trap(trap);
   }
 
-  void get_PCPI(PCPI &out) override {
-    if (!models.empty())
-      models[0]->get_PCPI(out);
-  }
-
-  void set_IRQ(const IRQ &in) override {
+  void get_trace_valid(bool trace_valid) override {
     for (auto &model : models)
-      model->set_IRQ(in);
+      model->get_trace_valid(trace_valid);
   }
 
-  void get_IRQ(IRQ &out) override {
+  void get_trace_data(uint64_t trace_data) override {
     if (!models.empty())
-      models[0]->get_IRQ(out);
+      models[0]->get_trace_data(trace_data);
   }
-
-  void set_Trace(const Trace &in) override {
-    for (auto &model : models)
-      model->set_Trace(in);
-  }
-
-  void get_Trace(Trace &out) override {
-    if (!models.empty())
-      models[0]->get_Trace(out);
-  }
-
-
 
   void compare_ports() {
     if (models.size() < 2)
